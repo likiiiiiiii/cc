@@ -5,7 +5,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     defaults:
       run:
         shell: cmd
@@ -18,7 +17,6 @@ jobs:
         run: |
           dir
           if not exist tab2long_henan.py ( echo tab2long_henan.py missing & exit /b 1 )
-          if not exist tab2long_henan.spec ( echo tab2long_henan.spec missing & exit /b 1 )
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -26,24 +24,22 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Show Python info
-        run: |
-          python -V
-          python -c "import sys;print(sys.executable)"
-          python -c "import platform;print(platform.platform())"
-
-      - name: Install build deps (pinned & compatible)
+      - name: Install build deps (pinned)
         run: |
           python -m pip install -U pip wheel
-          rem 数据处理依赖（含 .xls 的 xlrd<2.0）
           pip install "pandas==2.2.2" "numpy==2.0.2" "openpyxl==3.1.5" "xlrd<2.0" ^
                       "python-dateutil==2.9.0.post0" "pytz==2024.1" "tzdata==2024.1" "et-xmlfile==1.1.0"
-          rem 打包工具
           pip install "pyinstaller==6.16.0" pyinstaller-hooks-contrib
 
-      - name: Build (with spec)
+      - name: Build (no spec, onefile)
         run: |
-          pyinstaller --clean --onefile tab2long_henan.spec
+          pyinstaller --clean --onefile --name tab2long_henan tab2long_henan.py ^
+            --collect-submodules pandas ^
+            --collect-submodules numpy ^
+            --collect-submodules openpyxl ^
+            --collect-submodules xlrd ^
+            --collect-data pandas ^
+            --collect-data openpyxl
 
       - name: List dist
         run: dir dist
