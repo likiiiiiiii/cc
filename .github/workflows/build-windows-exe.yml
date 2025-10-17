@@ -1,5 +1,4 @@
 name: build-windows-exe
-
 on:
   workflow_dispatch:
 
@@ -10,20 +9,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Verify project files
+        run: |
+          dir
+          if not exist tab2long_henan.py ( echo tab2long_henan.py missing & exit /b 1 )
+          if not exist tab2long_henan.spec ( echo tab2long_henan.spec missing & exit /b 1 )
+
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Show Python info
+        run: |
+          python -V
+          python -c "import sys;print(sys.executable)"
+          python -c "import platform;print(platform.platform())"
+
+      - name: Install build deps (pinned & compatible)
         run: |
           python -m pip install -U pip wheel
-          pip install -r requirements.txt
-          pip install pyinstaller
+          REM 数据处理依赖（含 .xls 的 xlrd<2.0）
+          pip install "pandas==2.2.2" "numpy==2.0.2" "openpyxl==3.1.5" "xlrd<2.0" ^
+                      "python-dateutil==2.9.0.post0" "pytz==2024.1" "tzdata==2024.1" "et-xmlfile==1.1.0"
+          REM 打包工具
+          pip install "pyinstaller==6.16.0" pyinstaller-hooks-contrib
 
-      - name: Build with spec
+      - name: Build (with spec)
         run: |
           pyinstaller --clean --onefile tab2long_henan.spec
+        shell: cmd
+
+      - name: List dist
+        run: dir dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
