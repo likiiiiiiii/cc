@@ -5,6 +5,11 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: cmd
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,16 +35,15 @@ jobs:
       - name: Install build deps (pinned & compatible)
         run: |
           python -m pip install -U pip wheel
-          REM 数据处理依赖（含 .xls 的 xlrd<2.0）
+          rem 数据处理依赖（含 .xls 的 xlrd<2.0）
           pip install "pandas==2.2.2" "numpy==2.0.2" "openpyxl==3.1.5" "xlrd<2.0" ^
                       "python-dateutil==2.9.0.post0" "pytz==2024.1" "tzdata==2024.1" "et-xmlfile==1.1.0"
-          REM 打包工具
+          rem 打包工具
           pip install "pyinstaller==6.16.0" pyinstaller-hooks-contrib
 
       - name: Build (with spec)
         run: |
           pyinstaller --clean --onefile tab2long_henan.spec
-        shell: cmd
 
       - name: List dist
         run: dir dist
